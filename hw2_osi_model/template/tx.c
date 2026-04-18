@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
     struct sockaddr_in addr = {0};
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    // Parse and store destination IPv4 address.
+    // parse and store destination IPv4 address
     if (inet_pton(AF_INET, ip, &addr.sin_addr) != 1) {
         fprintf(stderr, "Invalid IPv4 address: %s\n", ip);
         close(s0);
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
 
     const char *msg = "Hello Sockets";
     size_t msg_len = strlen(msg);
-    // Send the assignment payload in one write operation.
+    // send assignment payload in one write operation
     ssize_t sent = send(s0, msg, msg_len, 0);
     if (sent < 0) {
         perror("send");

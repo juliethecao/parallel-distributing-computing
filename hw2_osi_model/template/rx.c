@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     }
 
     int reuse = 1;
-    // Allow fast restart without waiting for old socket state to clear.
+    // allow fast restart without waiting for old socket state to clear
     if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) != 0) {
         perror("setsockopt");
         close(s);
@@ -43,12 +43,14 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    // keep single-client server 
     if (listen(s, 1) != 0) {
         perror("listen");
         close(s);
         return 1;
     }
 
+    // accept one client, receive one short message, then exit
     int c = accept(s, NULL, NULL);
     if (c < 0) {
         perror("accept");
@@ -57,7 +59,7 @@ int main(int argc, char **argv) {
     }
 
     char buf[64] = {0};
-    // Read the single short message sent by TX.
+    // read single short message sent by TX
     ssize_t n = recv(c, buf, sizeof(buf) - 1, 0);
     if (n < 0) {
         perror("recv");
@@ -65,6 +67,7 @@ int main(int argc, char **argv) {
         close(s);
         return 1;
     }
+    // n == 0 means the peer closed the connection before sending more data
 
     buf[n] = '\0';
     printf("%s\n", buf);
