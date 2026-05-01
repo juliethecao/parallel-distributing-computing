@@ -1,0 +1,149 @@
+\pdfminorversion=6
+\documentclass[12pt]{article}
+\usepackage[paper=letterpaper,margin=1in]{geometry}
+\usepackage{multicol}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{float}
+\usepackage{hyperref}
+
+% remove lists indentation
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=*, itemsep=6pt, topsep=0pt, parsep=0pt}
+\setlist[enumerate]{leftmargin=*, itemsep=6pt, topsep=0pt, parsep=0pt}
+
+% discourage single lines at top/bottom of pages
+\widowpenalty=10000
+\clubpenalty=10000
+\displaywidowpenalty=10000
+
+%folder for graphics
+\graphicspath{{./figs/}}
+
+% pseudocode
+\usepackage[linesnumbered,lined,ruled,commentsnumbered]{algorithm2e}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\begingroup
+\centering
+\LARGE Parallel and Distributed Computing: Homework 4\par
+\vspace{10pt}
+\endgroup
+\noindent
+\fbox{
+  \parbox{\textwidth}{
+    \textbf{Objectives:} 
+    Parallelization of nested loops can be achieved by ``loop-unfolding," namely replicating the body of a loop in all computational resources labeled with the index of the loop. Matrix multiplication can be obtained using a three level nested loop program. This assignment illustrates the loop-unfolding technique by characterizing the progression of the computation when unfolding each one of the loops in all possible orderings of the loops.
+  }
+}  
+\vspace{6pt}
+
+%============================================================================
+\begin{multicols}{2}
+Consider the following three-level nested loop algorithm to multiply two square matrices $A$ and $B$ of size $n$ ( meaning they have $n \times n$ elements), on a single processor system:
+
+\vspace{20pt}
+\begin{algorithm}[H] %algorithm* uses two columns
+  \footnotesize
+  \SetAlgoLined
+  \SetKwProg{Def}{Function}{:}{\KwRet} %define shape of function
+  \SetKwFunction{mmult}{matrix\_mult} % define function's names
+
+  \KwIn{A\tcp*[r]{Input Matrix}}
+  \KwIn{B\tcp*[r]{Input Matrix}}
+  \KwIn{C\tcp*[r]{Result Matrix}}
+  \Def{\mmult{A, B, C}}{
+    \For{ $0 \leq i \leq n-1$}{
+      \For{$0 \leq j \leq n-1$}{
+        \For{$0 \leq k \leq n-1$}{
+          $ C_{i,j} \leftarrow C_{i,j} + A_{i,k} \cdot B_{k,j} $
+        }
+      }
+    }
+  }
+  \caption{\small Matrix multiplication}%
+  \label{mat-mul}
+\end{algorithm}      
+\vspace{25pt}      
+
+This is the exact same nested loop program as discussed in class and available in the class' slides. We discussed three different ways of performing this computation on a \mbox{$n$-processor} ring when unfolding the outermost loop with the index $i$.
+
+It is well known that changing the order of the loops is a program transformation that does not alter the final result (an invariant transformation.) The three nested loops can appear in one out of 6 permuted possibilities, namely: (i,j,k), (i,k,j), (j,i,k), (j,k,i), (k,i,j), (k,j,i).
+
+%===========================================================
+\subsection*{Assignment}
+Your assignment consists of three parts: 
+
+\paragraph{(1) Computation Progress:} Assuming execution of the above program in a single processor computer, characterize the manner in which the computation progresses for each one of the 6 possible nested loop cases.
+Provide a data to memory mapping. Show how the main arithmetic expression progresses, accumulating its value as the indices advance, with the innermost loop being the one that advances fastest. 
+
+\paragraph{(2) N-processors Ring:} In a manner akin to the one used in class (see slides), for each one of the nested loop cases, discuss the mapping of the computation on a $n$-processor ring if, for each of the 6 cases, the outermost loop is used to unfold and parallelize the computation.
+
+\paragraph{(3) Multi-thread unfolding:} Consider now the nested loop pseudocode as given in Algorithm~\ref{mat-mul} and its parallelzation (unfolding) on the outermost loop with index $i$.
+
+Utilizing the provided template code, complete the C function \texttt{mat\_multiply} that uses multiple threads to parallelize the matrix multiplication computation.
+
+{
+  \footnotesize
+  \centering
+\begin{verbatim}
+ void mat_multiply(Mat *A, Mat *B, Mat *C,
+                   unsigned int threads);
+\end{verbatim}
+}
+
+The \texttt{mat\_multiply} function receives four parameters:
+\begin{itemize}
+  \item \texttt{A, B}: Input matrices. Square matrices of size $n$, stored in row major form. For this exercise, consider $2 <= n <= 4096$.
+
+  \item \texttt{C}: Output matrix where the multiplication result will be stored. Given that \texttt{A} and \texttt{B} are square of size $n$, \texttt{C} is also square of size $n$.
+
+  \item \texttt{threads}: The number of threads used to perform the multiplication. For this exercise, consider this value restricted to $\{2,4,8,16\}$.
+  % Each thread is to compute a row of the resulting product matrix $C = A \times B$.
+\end{itemize}
+
+\paragraph{Meaningful results:} To actually achieve parallelism, and obtain meaningful experimental results, a computer with a multi-core processor should be used. A four-core processor is strongly recommended.
+
+% To understand the use of libraries in C, it is recommended to read: \url{https://computer.howstuffworks.com/c15.htm}.
+
+\paragraph{Debugging:} You may change any file in the template, but you will only submit \texttt{multiply.c} with the implementation of \texttt{mat\_multiply}, perhaps with more helper functions, all contained in the same \texttt{multiply.c} file. \textbf{Make sure your code works when the only modified file is \texttt{multiply.c}.} 
+
+\paragraph{Makefile:} The provided template has a Makefile with three targets:
+\begin{itemize}
+  \item \texttt{build}: compile and link the binary from the source code.
+  \item \texttt{test}: test that the result of the sequential version is equivalent to the result of the parallel version.
+  \item \texttt{clean}: delete building and testing artifacts.
+\end{itemize}
+
+So to build and test your results, you can simply run ``\texttt{make build test}''. Note that the test only check that the sequential and parallel implementations output the same. That does not ensure correctness.
+
+\paragraph{Achieving parallelism:} Feel free to use \texttt{pthread} or \texttt{openMP} to implement the parallel version of the function. To obtain meaningful experimental results, a computer with a multi-core processor should be used. A four-core processor is strongly recommended.
+
+
+% ===========================================================
+\subsection*{Report}
+Write a report of a maximum of 5 pages. {\em Do not forget to include your name and student ID number on the top of the first page of your report.}
+
+The report must consist of three parts:
+\begin{enumerate}
+\item The characterization of the computation progress in a single processor computer, for each of the six mentioned permutations. Add figures as necessary to support your explanation.
+\item Discussion of the mapping of the problem to a n-processors Ring. Add figures as necessary to support your explanation.
+\item Discussion of the gain in performance of the multi-thread implementation as a function of the number of threads concurrently used. Add plots and figures as necessary to explain your results.
+\end{enumerate}
+
+
+%===========================================================
+\subsection*{Submission}
+Submit \textbf{one} zip file named \texttt{hw4.zip}, containing \textbf{exactly 3 files}. Make sure the zip file does \textbf{not} include sub-directories (as Mac's default compression tool does) or extra files:
+\begin{enumerate}
+\item \texttt{multiply.c}: The well commented C source code of your multi-threaded implementation of the matrix multiplication. \textbf{Do not submit any other source code file}.
+\item \texttt{report.pdf}: The digitally produced report.
+\item \texttt{team.txt}: Text file with two lines containing the UCINetID and name of each student in your team. Each line will have this format:\\
+  \texttt{<UCINetID>: <firstName> <lastName>}
+\end{enumerate}
+
+\end{multicols}
+\end{document}
